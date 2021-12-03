@@ -13,7 +13,7 @@ class AuthController extends Controller
         $request->validate([
             "name" => 'required|string',
             "email" => 'required|string|unique:users,email',
-            "password"=>'required|string|confirmed'
+            "password"=>'required|string'
         ]);
 
         $user = User::create([
@@ -26,7 +26,8 @@ class AuthController extends Controller
 
         $response = [
             'user' => $user,
-            'token' => $token
+            'token' => $token,
+            'provider' => 'local'
         ];
 
         return response($response, 201);
@@ -43,8 +44,14 @@ class AuthController extends Controller
         $where = ["email"=>$fields['email']];
         $user = User::where($where)->first();
 
+        if(!$user){
+            return response([
+                'message' => "User not found"
+            ],401);
+        }
+
         // Check Password
-        if(!$user || !Hash::check($fields['password'], $user->password))
+        if(!Hash::check($fields['password'], $user->password))
         {
             return response([
                 'message' => "Bad credentials"
@@ -55,7 +62,8 @@ class AuthController extends Controller
 
         $response = [
             'user'=>$user,
-            'token'=>$token
+            'token'=>$token,
+            'provider'=>'local'
         ];
 
         return response($response,201);
@@ -63,7 +71,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         $response = [
             'message' => 'logged out'
@@ -89,6 +97,6 @@ class AuthController extends Controller
 
         $token = $user->createToken('app_token')->plainTextToken;
 
-        return response(['user' => $user, 'token' => $token], 200);
+        return response(['user' => $user, 'token' => $token, 'provider' => $provider], 200);
     }
 }
