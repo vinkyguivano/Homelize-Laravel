@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\ProjectImage;
+use App\Models\Style;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        $this->call([
+            CitySeeder::class,
+            ProfesionalTypeSeeder::class,
+            BudgetSeeder::class,
+            StyleSeeder::class,
+            RoomSeeder::class,
+            ProfessionalSeeder::class,
+            ProjectSeeder::class,
+            ProjectImageSeeder::class
+        ]);
     }
 }

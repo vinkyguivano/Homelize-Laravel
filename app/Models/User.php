@@ -48,4 +48,8 @@ class User extends Authenticatable
     public function providers(){
         return $this->hasMany(Provider::class, 'user_id', 'id');
     }
+
+    public function projectImages(){
+        return $this->belongsToMany(ProjectImage::class, 'favourites', 'user_id', 'project_image_id');
+    }
 }
