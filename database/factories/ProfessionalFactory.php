@@ -22,6 +22,7 @@ class ProfessionalFactory extends Factory
             'account_number' => $this->faker->randomNumber(9, true),
             'professional_type_id' => mt_rand(1,3),
             'city_id' => mt_rand(1,38),
+            'image_path' => $this->faker->imageUrl(640, 480, 'Professional', true)
         ];
     }
 }

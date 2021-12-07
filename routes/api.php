@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProjectImageController;
+use App\Http\Controllers\RoomController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,11 +23,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/rooms', [RoomController::class, 'getRooms']);
+});
+
+Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'design'], function() {
+    Route::get('/filters', [ProjectImageController::class, 'getFilters']);
+    Route::get('/images', [ProjectImageController::class, 'getImages']);
+    Route::get('/images/{id}', [ProjectImageController::class, 'getImageDetail']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/{provider}', [AuthController::class,'SocialLogin']);
 Route::post('test', function(Request $request) {
-    return response(["Hello" => $request->get('name')],200);
+    return response(["Hello" => $request->has('name')],200);
 });

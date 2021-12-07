@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateProfessionalsTable extends Migration
@@ -21,6 +22,7 @@ class CreateProfessionalsTable extends Migration
             $table->text('address');
             $table->string('password');
             $table->string('account_number')->unique();
+            $table->string('image_path')->nullable();
             $table->foreignId('city_id')
             ->constrained('cities')
             ->onUpdate('cascade')
@@ -29,7 +31,8 @@ class CreateProfessionalsTable extends Migration
             ->constrained('professional_types')
             ->onUpdate('cascade')
             ->onDelete('cascade');
-            $table->timestamps();
+            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
         });
     }
 
