@@ -21,13 +21,18 @@ class BudgetSeeder extends Seeder
                 'nominal' => 'Rp. 1 JT - Rp 100 JT'
             ],
             [
-                'name' => 'Medium',
-                'nominal' => 'Rp. 100 JT - Rp 1 M'
+                'name' => 'Standarf',
+                'nominal' => 'Rp. 100 JT - Rp 500 JT'
             ],
             [
-                'name' => 'High',
-                'nominal' => 'Rp 1 M lebih'
-            ]
+                'name' => 'Premium',
+                'nominal' => 'Rp 500 JT - Rp 2M'
+            ],
+            [
+                'name' => 'Luxury',
+                'nominal' => 'Rp 2M lebih'
+            ],
+
         ]);
     }
 }

@@ -15,7 +15,6 @@ class ProjectImageFactory extends Factory
     {
         return [
             'project_id' => mt_rand(1,150),
-            'name' => $this->faker->word(),
             'description' => $this->faker->paragraph(),
             'project_id' => mt_rand(1,150),
             'style_id' => mt_rand(1,10),

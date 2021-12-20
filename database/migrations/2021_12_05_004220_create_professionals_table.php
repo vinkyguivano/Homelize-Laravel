@@ -20,9 +20,12 @@ class CreateProfessionalsTable extends Migration
             $table->string('email')->unique();
             $table->string('phone_number')->unique();
             $table->text('address');
+            $table->point('location')->spatialIndex();
+            $table->text('description')->nullable();
             $table->string('password');
             $table->string('account_number')->unique();
             $table->string('image_path')->nullable();
+            $table->string('thumbnail')->nullable();
             $table->foreignId('city_id')
             ->constrained('cities')
             ->onUpdate('cascade')

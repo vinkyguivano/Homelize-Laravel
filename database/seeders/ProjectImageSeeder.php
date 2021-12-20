@@ -16,7 +16,7 @@ class ProjectImageSeeder extends Seeder
     public function run()
     {
         ProjectImage::factory()
-        ->count(400)
+        ->count(500)
         ->state(new Sequence(
             [
                 'room_id' => 1, 
@@ -40,34 +40,22 @@ class ProjectImageSeeder extends Seeder
             ],
             [
                 'room_id' => 6, 
-                'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709801/homelize/design/ruang-tamu.jpg'
-            ],
-            [
-                'room_id' => 7, 
-                'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709801/homelize/design/ruang-belajar.jpg'
-            ],
-            [
-                'room_id' => 8, 
                 'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709801/homelize/design/ruang-kerja.jpg'
             ],
             [
-                'room_id' => 9, 
-                'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709804/homelize/design/garasi.png'
-            ],
-            [
-                'room_id' => 10, 
+                'room_id' => 7, 
                 'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709800/homelize/design/ruang-laundry.jpg'
             ],
             [
-                'room_id' => 11, 
+                'room_id' => 8, 
                 'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709802/homelize/design/desain-eksterior.png'
             ],
             [
-                'room_id' => 12, 
+                'room_id' => 9, 
                 'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709802/homelize/design/kolam-renang.jpg'
             ],
             [
-                'room_id' => 13, 
+                'room_id' => 10, 
                 'image_path' => 'https://res.cloudinary.com/dwrorg2la/image/upload/v1638709802/homelize/design/taman-belakang.jpg'
             ],
         ))

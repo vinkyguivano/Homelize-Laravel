@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 class RoomController extends Controller
 {
     public function getRooms(){
-        $rooms = DB::table('rooms')->select('id', 'name')->get();
+        $rooms = DB::table('rooms')
+            ->select('id', 'name', "image_path")->get();
 
         return response()->json($rooms, 200);
     }

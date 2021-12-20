@@ -13,7 +13,7 @@ class CreateClientProjectImageTable extends Migration
      */
     public function up()
     {
-        Schema::create('favourites', function (Blueprint $table) {
+        Schema::create('map_user_images', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('project_image_id')->constrained('project_images')->onUpdate('cascade')->onDelete('cascade');
         });

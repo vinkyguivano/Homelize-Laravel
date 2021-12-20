@@ -18,7 +18,6 @@ class CreateProjectImagesTable extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->onUpdate('cascade')->onDelete('cascade');
             $table->string('image_path');
-            $table->string('name');
             $table->text('description')->nullable();
             $table->foreignId('style_id')->constrained('styles')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('room_id')->constrained('rooms')->onUpdate('cascade')->onDelete('cascade');
