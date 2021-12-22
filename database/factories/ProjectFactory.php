@@ -17,7 +17,8 @@ class ProjectFactory extends Factory
             //
             'name' => $this->faker->word(),
             'description' => $this->faker->paragraph(),
-            'professional_id' => mt_rand(1,100)
+            'professional_id' => mt_rand(1,100),
+            'year' => mt_rand(1980, 2025)
         ];
     }
 }

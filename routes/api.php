@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfessionalController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectImageController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Http\Request;
@@ -38,6 +39,9 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'design'], function(
 
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'professional'], function() {
     Route::get('/professionals', [ProfessionalController::class, 'getList']);
+    Route::get('/professionals/{id}', [ProfessionalController::class, 'getDetail']);
+    Route::get('/projects/{id}', [ProjectController::class, 'getDetail']);
+    Route::get('/professionals/{id}/review', [ProfessionalController::class, 'getRating']);
     Route::get('/cities', [ProfessionalController::class, 'getCities']);
 });
 

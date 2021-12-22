@@ -18,6 +18,7 @@ class CreateProjectsTable extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->integer('year');
             $table->foreignId('professional_id')
                 ->constrained('professionals')
                 ->onUpdate('cascade')
