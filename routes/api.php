@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectImageController;
 use App\Http\Controllers\RoomController;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,9 +47,15 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'professional'], fun
     Route::get('/cities', [ProfessionalController::class, 'getCities']);
 });
 
+Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'orders'], function() {
+    Route::post('/', [OrderController::class, 'createOrder']);
+    Route::post('/{id}/images', [OrderController::class, 'uploadImage']);
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/{provider}', [AuthController::class,'SocialLogin']);
 Route::post('test', function(Request $request) {
     return response(["Hello" => $request->has('name')],200);
 });
+Route::post('test/upload-photo', [OrderController::class, 'UploadPhoto']);
