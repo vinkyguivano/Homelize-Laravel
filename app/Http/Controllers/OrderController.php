@@ -138,7 +138,9 @@ class OrderController extends Controller
                     o.phone_number,
                     o.price,
                     o.created_at,
+                    o.status_id as status_id,
                     ref_order_statues.name as status,
+                    o.type_id as order_type_id,
                     CASE WHEN type_id = 1 THEN "Desain Arsitektur"
                     WHEN type_id = 2 THEN "Desain Interior" 
                     ELSE NULL END as order_type')
@@ -146,6 +148,7 @@ class OrderController extends Controller
                 ->when($statusId, function($query, $statusId){
                     return $query->where('o.status_id', $statusId);
                 })
+                ->orderBy("o.id", "desc")
                 ->paginate(50);
         return response()->json($res, 200);
     }
@@ -194,6 +197,7 @@ class OrderController extends Controller
                                 "package_name", CASE WHEN package_id = 1 THEN "Paket Silver" 
                                 WHEN package_id = 2 THEN "Paket Gold" ELSE null END,
                                 "rooms", CASE WHEN COUNT(map_architecture_order_room.id) > 0 THEN CONCAT( "[", GROUP_CONCAT(
+                                    DISTINCT
                                     json_object(
                                         "id", rooms.id,
                                         "name", rooms.name,
