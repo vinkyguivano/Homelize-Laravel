@@ -50,6 +50,9 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'professional'], fun
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'orders'], function() {
     Route::post('/', [OrderController::class, 'createOrder']);
     Route::post('/{id}/images', [OrderController::class, 'uploadImage']);
+    Route::get('/', [OrderController::class, 'getOrderList']);
+    Route::get('/{order}', [OrderController::class, 'getOrderDetail']);
+    Route::post('/{order}/update', [OrderController::class, 'updateOrder']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

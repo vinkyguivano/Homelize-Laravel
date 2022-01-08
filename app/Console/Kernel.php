@@ -2,8 +2,11 @@
 
 namespace App\Console;
 
+use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -16,6 +19,14 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        $schedule->call(function(){
+            DB::table('orders')
+                ->where('status_id', 1)
+                ->where('payment_deadline', '<', Carbon::now()->toDateTimeString())
+                ->update([
+                    'status_id' => 5
+                ]);
+        })->everyMinute();
     }
 
     /**

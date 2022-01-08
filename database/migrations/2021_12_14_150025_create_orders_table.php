@@ -27,6 +27,7 @@ class CreateOrdersTable extends Migration
             $table->string('price');
             $table->unsignedInteger("status_id")->default('1');
             $table->unsignedInteger("type_id");
+            $table->dateTime('payment_deadline');
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
         });

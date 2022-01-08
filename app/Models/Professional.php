@@ -20,4 +20,8 @@ class Professional extends Model
     public function projects(){
         return $this->hasMany(Project::class, 'professional_id', 'id');
     }
+
+    public function order(){
+        return $this->hasMany(Order::class);
+    }
 }
