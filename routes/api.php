@@ -6,7 +6,7 @@ use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectImageController;
 use App\Http\Controllers\RoomController;
-use App\Models\Order;
+use App\Models\ProjectImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,9 +55,25 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'orders'], function(
     Route::post('/{order}/update', [OrderController::class, 'updateOrder']);
 });
 
+Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'v1'], function() {
+    Route::group(['prefix' => 'professionals'], function() {
+        Route::post('/{id}/update', [ProfessionalController::class, 'updateProfessional']);
+        Route::post('/{id}/image', [ProfessionalController::class, 'uploadImage']);
+        Route::post('/{id}/projects', [ProjectController::class, 'addProject']);
+        Route::post("/{id}/profile-completion", [ProfessionalController::class, 'profileComplete']);
+    });
+    Route::delete('/projects/{id}', [ProjectController::class, 'deleteProject']);
+    Route::put('/projects/{id}', [ProjectController::class, 'updateProject']);
+    Route::group(['prefix' => 'images'], function() {
+        Route::post('/{id}', [ProjectImageController::class, 'addProjectImage']);
+    });
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/{provider}', [AuthController::class,'SocialLogin']);
+Route::post('/professional/register', [AuthController::class, 'registerProfessional']);
+Route::post('/professional/login', [AuthController::class, 'loginProfessional']);
 Route::post('test', function(Request $request) {
     return response(["Hello" => $request->has('name')],200);
 });

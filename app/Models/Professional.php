@@ -3,11 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Professional extends Model
+class Professional extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens;
+
+    protected $guarded = [];
+
+    protected $hidden = [
+        'password',
+        'created_at',
+        'updated_at'
+    ];
 
     public function professionalType(){
         return $this->belongsTo(ProfessionalType::class, 'professional_type_id', 'id');

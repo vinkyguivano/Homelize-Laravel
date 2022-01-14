@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Professional;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -27,7 +28,8 @@ class AuthController extends Controller
         $response = [
             'user' => $user,
             'token' => $token,
-            'provider' => 'local'
+            'provider' => 'local',
+            'type' => 'user'
         ];
 
         return response($response, 201);
@@ -63,7 +65,8 @@ class AuthController extends Controller
         $response = [
             'user'=>$user,
             'token'=>$token,
-            'provider'=>'local'
+            'provider'=>'local',
+            'type' => 'user'
         ];
 
         return response($response,201);
@@ -97,6 +100,73 @@ class AuthController extends Controller
 
         $token = $user->createToken('app_token')->plainTextToken;
 
-        return response(['user' => $user, 'token' => $token, 'provider' => $provider], 200);
+        return response(['user' => $user, 'token' => $token, 'provider' => $provider, 'type' => 'user'], 200);
+    }
+
+    public function registerProfessional(Request $request){
+        $res = $request->validate([
+            "name" => 'required|string|min:3',
+            "phone_number" => 'required',
+            "professional_type_id"=>'required|integer',
+            "email" => 'required|string|unique:professionals,email',
+            "password" => 'required|string'
+        ]);
+
+        $res['password'] = bcrypt($res['password']);
+        $user = Professional::create($res);
+        
+        $token = $user->createToken('myapptoken')->plainTextToken;
+
+        $response = [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'type_id' => $user->professional_type_id,
+                'status_id' => 1
+            ],
+            'token' => $token,
+            'provider' => 'local',
+            'type' => 'professional'
+        ];
+
+        return response($response, 201);
+    }
+
+    public function loginProfessional(Request $request){
+        $fields = $request->validate([
+            "email" => 'required|string',
+            "password" => 'required|string',
+        ]);
+
+        $where = ["email"=>$fields['email']];
+        $user = Professional::where($where)->first();
+
+        if(!$user || !Hash::check($fields['password'], $user->password))
+        {
+            return response([
+                'message' => "The provided credentials are incorrect"
+            ],401);
+        }
+
+        $token = $user->createToken('myapptoken')->plainTextToken;
+
+        $response = [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'type_id' => $user->professional_type_id,
+                'status_id' => $user->status_id
+            ],
+            'token' => $token,
+            'provider' => 'local',
+            'type' => 'professional'
+        ];
+
+        return response($response,201);
+
     }
 }

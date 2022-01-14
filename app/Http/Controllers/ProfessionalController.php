@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Professional;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -82,6 +83,7 @@ class ProfessionalController extends Controller
                             '%'.$q.'%'
                         ]);
                     })
+                    ->where('p.status_id', '=', 2)
                     ->groupBy("p.id")
                     ->orderBy($orderBy, $orderSort)
                     ->paginate(10);
@@ -101,9 +103,17 @@ class ProfessionalController extends Controller
                     p.email as email,
                     p.phone_number as phone_number,
                     p.address as address,
-                    cities.name as city_name,
-                    cities.province_name as province_name,
+                    JSON_OBJECT(
+                        "id", p.city_id,
+                        "name", cities.name,
+                        "province_name", cities.province_name
+                    ) as city,
+                    JSON_OBJECT(
+                        "latitude", x(p.location),
+                        "longitude", y(p.location)
+                    ) as location,
                     p.description,
+                    p.account_number,
                     p.image_path as profile_pic,
                     p.thumbnail as cover_pic,
                     professional_types.id as type_id,
@@ -124,13 +134,15 @@ class ProfessionalController extends Controller
                     ->selectRaw('
                         projects.id as id,
                         projects.name as name,
-                        project_images.image_path
+                        project_images.image_path,
+                        projects.year as year
                     ')
                     ->where('p.id', $id)
                     ->groupBy('id')
                     ->get();
 
             $res->projects = $res2;
+            $this->jsonDecode($res);
         
         return response()->json($res, 200);
     }
@@ -163,5 +175,61 @@ class ProfessionalController extends Controller
                     ->paginate(10);
 
         return response()->json($res, 200);
+    }
+
+    public function updateProfessional(Request $request, $id){
+        $accountNumber = $request->account_number;
+        if(DB::table('professionals')->where('account_number', $accountNumber)
+            ->where('professionals.id', '<>', $id)->exists()){
+                return response()->json('account number has been used', 500);
+        }
+
+        $request['location'] = DB::raw("(GeomFromText('POINT(".$request->location['latitude']." ".$request->location['longitude'].")'))");
+
+        DB::table('professionals')
+            ->where('id', $id)
+            ->update($request->all());
+
+        return response()->json(['message' => 'updated succesfully'], 200);
+    }
+
+    public function uploadImage(Request $request, $id){
+        $fields = array();
+        $professional = Professional::findOrFail($id);
+        if($request->has('profile_image')){
+            $image = $request->profile_image->getRealPath();
+            $filename= 'profile_pic_professional_id_'.$professional->id;
+            $direktori = 'profile_pic';
+            if($professional->image_path){
+                $image_path = CloudinaryStorage::replace($professional->image_path, $image, $filename, $direktori);
+            }else{
+                $image_path = CloudinaryStorage::upload($image, $filename, $direktori);
+            }
+
+            $fields['image_path'] = $image_path;
+        }
+
+        if($request->has('cover_image')){
+            $image = $request->cover_image->getRealPath();
+            $filename= 'cover_pic_professional_id_'.$professional->id;
+            $direktori = 'cover_pic';
+            if($professional->thumbnail){
+                $thumbnail = CloudinaryStorage::replace($professional->thumbnail, $image, $filename, $direktori);
+            }else{
+                $thumbnail = CloudinaryStorage::upload($image, $filename, $direktori);
+            }
+            $fields['thumbnail'] = $thumbnail;
+        }
+
+        DB::table('professionals')->where('id', $id)->update($fields);
+        return response()->json(['message' => 'image uploaded succesfully'], 200);
+    }
+
+    public function profileComplete($id){
+        $professional = Professional::findOrFail($id);
+        $professional->status_id = 2;
+        $professional->save();
+
+        return response()->json('[message => status updated successfully]', 200);
     }
 }

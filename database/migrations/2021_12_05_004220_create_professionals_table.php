@@ -18,19 +18,19 @@ class CreateProfessionalsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone_number')->unique();
-            $table->text('address');
-            $table->point('location')->spatialIndex();
+            $table->string('phone_number');
+            $table->text('address')->nullable();
+            $table->point('location')->nullable();
             $table->text('description')->nullable();
             $table->string('password');
-            $table->string('account_number')->unique();
+            $table->string('account_number')->unique()->nullable();
             $table->string('image_path')->nullable();
             $table->string('thumbnail')->nullable();
-            $table->foreignId('city_id')
+            $table->foreignId('city_id')->nullable()
             ->constrained('cities')
             ->onUpdate('cascade')
             ->onDelete('cascade');
-            $table->foreignId('professional_type_id')
+            $table->foreignId('professional_type_id')->nullable()
             ->constrained('professional_types')
             ->onUpdate('cascade')
             ->onDelete('cascade');

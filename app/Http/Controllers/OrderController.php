@@ -124,8 +124,9 @@ class OrderController extends Controller
     }
 
     public function getOrderList(Request $request){
-        $userId = $request->user()->id;
         $statusId = $request->query('sid');
+        $userId = $request->query('uid');
+        $professionalId = $request->query('pid');
 
         $res = DB::table('orders', 'o')
                 ->leftJoin('professionals', 'professionals.id', 'o.professional_id')
@@ -144,7 +145,12 @@ class OrderController extends Controller
                     CASE WHEN type_id = 1 THEN "Desain Arsitektur"
                     WHEN type_id = 2 THEN "Desain Interior" 
                     ELSE NULL END as order_type')
-                ->where('o.user_id', '=', $userId)
+                ->when($userId, function($query, $userId){
+                    return $query->where('o.user_id', '=', $userId);
+                })
+                ->when($professionalId, function($query, $professionalId){
+                    return $query->where('o.professional_id', '=', $professionalId);
+                })
                 ->when($statusId, function($query, $statusId){
                     return $query->where('o.status_id', $statusId);
                 })
@@ -164,10 +170,13 @@ class OrderController extends Controller
                 ->leftJoin('architecture_supporting_images', "architecture_supporting_images.order_id", "o.id")
                 ->leftJoin('styles', 'styles.id', 'architecture_orders.style_id')
                 ->leftJoin('rooms', 'rooms.id', 'map_architecture_order_room.room_id')
+                ->leftJoin('payment_images', 'payment_images.order_id', 'o.id')
+                ->leftJoin('users', 'users.id', 'o.user_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
                             o.phone_number as client_phone_number,
+                            users.email as client_email,
                             o.price as price,
                             o.payment_deadline as payment_deadline,
                             o.created_at as created_at,
@@ -186,6 +195,13 @@ class OrderController extends Controller
                                 "email", professionals.email,
                                 "phone_number", professionals.phone_number
                             ) as professional,
+                            CASE WHEN COUNT(payment_images.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", payment_images.id,
+                                    "image_path", payment_images.image_path
+                                )
+                            ) , "]") ELSE NULL END as payment_images,
                             JSON_OBJECT(
                                 "land_width", land_width,
                                 "land_length", land_length,
@@ -205,6 +221,7 @@ class OrderController extends Controller
                                     )
                                 ), "]") ELSE null END,
                                 "images", CASE WHEN COUNT(architecture_supporting_images.id) > 0 THEN CONCAT("[", GROUP_CONCAT(
+                                    DISTINCT
                                     json_object(
                                         "id", architecture_supporting_images.id,
                                         "image_path", architecture_supporting_images.image_path,
@@ -226,10 +243,13 @@ class OrderController extends Controller
                 ->leftJoin('room_images', "room_images.map_id", "map_interior_order_room.id")
                 ->leftJoin('styles', 'styles.id', 'map_interior_order_room.style_id')
                 ->leftJoin('rooms', 'rooms.id', 'map_interior_order_room.room_id')
+                ->leftJoin('payment_images', 'payment_images.order_id', 'o.id')
+                ->leftJoin('users', 'users.id', 'o.user_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
                             o.phone_number as client_phone_number,
+                            users.email as client_email,
                             o.price as price,
                             o.payment_deadline as payment_deadline,
                             o.created_at as created_at,
@@ -248,6 +268,13 @@ class OrderController extends Controller
                                 "email", professionals.email,
                                 "phone_number", professionals.phone_number
                             ) as professional,
+                            CASE WHEN COUNT(payment_images.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", payment_images.id,
+                                    "image_path", payment_images.image_path
+                                )
+                            ) , "]") ELSE NULL END as payment_images,
                             JSON_OBJECT(
                                 "id", map_interior_order_room.id,
                                 "room_category", rooms.name,
@@ -311,6 +338,20 @@ class OrderController extends Controller
                 $order->status_id = 5;
                 $order->save();
                 return response()->json(['message' => 'order canceled successfully'], 200);
+                break;
+            ///Accept Payment Confirmation
+            case "3":
+                $order->status_id = 3;
+                $order->save();
+                return response()->json(['message' => 'payment confirmed successfully'], 200);
+                break;
+            ///Reject Payment Confirmation
+            case "4":
+                $paymentDeadline = Carbon::now()->addDay();
+                $order->status_id = 1;
+                $order->payment_deadline = $paymentDeadline;
+                $order->save();
+                return response()->json(['message' => 'payment updated successfully'], 200);
                 break;
             default :
                 break;

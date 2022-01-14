@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             ProfessionalSeeder::class,
             ProjectSeeder::class,
             ProjectImageSeeder::class,
-            RefOrderStatusSeeder::class
+            RefOrderStatusSeeder::class,
+            RefProfessionalStatusSeeder::class
             // OrderSeeder::class,
             // RatingSeeder::class
         ]);

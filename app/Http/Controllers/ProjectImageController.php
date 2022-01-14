@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProjectImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -56,6 +57,7 @@ class ProjectImageController extends Controller
                             '%'.$q.'%'
                         ]);
                     })
+                    ->where('professionals.status_id', 2)
                     ->groupBy('project_id')
                     ->paginate(10)->withQueryString();
     
@@ -70,6 +72,8 @@ class ProjectImageController extends Controller
                     p.image_path,
                     p.description,
                     p.budget_id,
+                    p.minimum_budget,
+                    p.maximum_budget,
                     p.project_id,
                     CASE WHEN (SELECT 1
                         FROM map_user_images mui 
@@ -164,6 +168,23 @@ class ProjectImageController extends Controller
                     ->paginate(10)->withQueryString();
         
         return response()->json($result, 200);
+    }
 
+    public function addProjectImage($id, Request $request){
+        $projectImage = ProjectImage::findOrFail($id);
+        $fileName = 'project_image_'.$id;
+        $folder = "project";
+        $image = $request->file('image');
+        if($projectImage->image_path){
+            CloudinaryStorage::delete($projectImage->image_path, $folder);
+        }
+        $image_path = CloudinaryStorage::upload($image->getRealPath(), $fileName, $folder);
+        DB::table('project_images')->where('id', $id)->update([
+            "image_path" => $image_path
+        ]);
+
+        return response()->json([
+            'message' => 'image upload successfully'
+        ], 200);
     }
 }
