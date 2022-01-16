@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ArchitectureOrder;
 use App\Models\Order;
+use App\Models\Rating;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,9 +153,10 @@ class OrderController extends Controller
                     return $query->where('o.professional_id', '=', $professionalId);
                 })
                 ->when($statusId, function($query, $statusId){
-                    return $query->where('o.status_id', $statusId);
+                    $statusId = explode(',', $statusId);
+                    return $query->whereIn('o.status_id', $statusId);
                 })
-                ->orderBy("o.id", "desc")
+                ->orderBy("o.updated_at", "desc")
                 ->paginate(50);
         return response()->json($res, 200);
     }
@@ -172,14 +174,17 @@ class OrderController extends Controller
                 ->leftJoin('rooms', 'rooms.id', 'map_architecture_order_room.room_id')
                 ->leftJoin('payment_images', 'payment_images.order_id', 'o.id')
                 ->leftJoin('users', 'users.id', 'o.user_id')
+                ->leftJoin('order_progress', 'order_progress.order_id', 'o.id')
+                ->leftJoin('ratings', 'o.id', 'ratings.order_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
                             o.phone_number as client_phone_number,
-                            users.email as client_email,
                             o.price as price,
                             o.payment_deadline as payment_deadline,
                             o.created_at as created_at,
+                            ratings.rating as rate,
+                            ratings.review as review,
                             JSON_OBJECT(
                                 "id", o.type_id,
                                 "name", "Desain Arsitektur"
@@ -189,11 +194,18 @@ class OrderController extends Controller
                                 "name", ref_order_statues.name
                             ) as status,
                             JSON_OBJECT(
+                                "id", users.id,
+                                "name", users.name,
+                                "profile_pic", users.image_path,
+                                "email", users.email
+                            ) as user,
+                            JSON_OBJECT(
                                 "id", professionals.id,
                                 "name", professionals.name,
                                 "account_number", professionals.account_number,
                                 "email", professionals.email,
-                                "phone_number", professionals.phone_number
+                                "phone_number", professionals.phone_number,
+                                "profile_pic", professionals.image_path
                             ) as professional,
                             CASE WHEN COUNT(payment_images.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
                                 DISTINCT
@@ -202,6 +214,17 @@ class OrderController extends Controller
                                     "image_path", payment_images.image_path
                                 )
                             ) , "]") ELSE NULL END as payment_images,
+                            CASE WHEN COUNT(order_progress.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", order_progress.id,
+                                    "name", order_progress.name,
+                                    "link", order_progress.file,
+                                    "description", order_progress.description,
+                                    "created_at", order_progress.created_at 
+                                )
+                                order by order_progress.id desc
+                            ) , "]") ELSE NULL END as order_progress,
                             JSON_OBJECT(
                                 "land_width", land_width,
                                 "land_length", land_length,
@@ -245,14 +268,17 @@ class OrderController extends Controller
                 ->leftJoin('rooms', 'rooms.id', 'map_interior_order_room.room_id')
                 ->leftJoin('payment_images', 'payment_images.order_id', 'o.id')
                 ->leftJoin('users', 'users.id', 'o.user_id')
+                ->leftJoin('order_progress', 'order_progress.order_id', 'o.id')
+                ->leftJoin('ratings', 'o.id', 'ratings.order_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
                             o.phone_number as client_phone_number,
-                            users.email as client_email,
                             o.price as price,
                             o.payment_deadline as payment_deadline,
                             o.created_at as created_at,
+                            ratings.rating as rate,
+                            ratings.review as review,
                             JSON_OBJECT(
                                 "id", o.type_id,
                                 "name", "Desain Interior"
@@ -262,11 +288,18 @@ class OrderController extends Controller
                                 "name", ref_order_statues.name
                             ) as status,
                             JSON_OBJECT(
+                                "id", users.id,
+                                "name", users.name,
+                                "email", users.email,
+                                "profile_pic", users.image_path
+                            ) as user,
+                            JSON_OBJECT(
                                 "id", professionals.id,
                                 "name", professionals.name,
                                 "account_number", professionals.account_number,
                                 "email", professionals.email,
-                                "phone_number", professionals.phone_number
+                                "phone_number", professionals.phone_number,
+                                "profile_pic", professionals.image_path
                             ) as professional,
                             CASE WHEN COUNT(payment_images.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
                                 DISTINCT
@@ -275,6 +308,17 @@ class OrderController extends Controller
                                     "image_path", payment_images.image_path
                                 )
                             ) , "]") ELSE NULL END as payment_images,
+                            CASE WHEN COUNT(order_progress.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", order_progress.id,
+                                    "name", order_progress.name,
+                                    "link", order_progress.file,
+                                    "description", order_progress.description,
+                                    "created_at", order_progress.created_at 
+                                )
+                                order by order_progress.id desc
+                            ) , "]") ELSE NULL END as order_progress,
                             JSON_OBJECT(
                                 "id", map_interior_order_room.id,
                                 "room_category", rooms.name,
@@ -284,6 +328,7 @@ class OrderController extends Controller
                                 "room_length", room_length,
                                 "note", note,
                                 "images", CASE WHEN COUNT(room_images.id) > 0 THEN CONCAT("[", GROUP_CONCAT(
+                                    DISTINCT
                                     JSON_OBJECT(
                                         "id", room_images.id,
                                         "image_path", room_images.image_path,
@@ -335,7 +380,7 @@ class OrderController extends Controller
                 break;
             ///Cancel Order
             case "2":
-                $order->status_id = 5;
+                $order->status_id = 6;
                 $order->save();
                 return response()->json(['message' => 'order canceled successfully'], 200);
                 break;
@@ -353,8 +398,80 @@ class OrderController extends Controller
                 $order->save();
                 return response()->json(['message' => 'payment updated successfully'], 200);
                 break;
+            //Professional finish Order
+            case "5":
+                $link = $request['link'];
+                $description = 'Kamu dapat melihat hasil akhir pengerjaan desain melalui link ini '.$link;
+                DB::table('order_progress')->insert([
+                    'order_id' => $orderId,
+                    'name' => 'Order selesai oleh Professional',
+                    'description' => $description
+                ]);
+                $order->status_id = 4;
+                $order->save();
+                return response()->json(['message' => 'order updated successfully'], 200);
+                break;
+            //Client finish Order
+            case "6":
+                DB::table('order_progress')->insert([
+                    'order_id' => $orderId,
+                    'name' => 'Order selesai oleh Client',
+                    'description' => 'Order telah dikonfirmasi selesai oleh Client'
+                ]);
+                $order->status_id = 5;
+                $order->save();
+                return response()->json(['message' => 'order updated successfully'], 200);
+                break;
             default :
                 break;
+        }
+    }
+
+    public function updateOrderProgress(Order $order, Request $request){
+        $request->validate([
+            'current_update' => 'required|string',
+            'file' => 'max:10000',
+        ]);
+
+        $data['order_id'] = $order->id;
+        $data['name'] = $request['current_update'];
+
+        if($request->file('file')){
+            $file = $request->file('file');
+            $fileName = time()."_".$file->getClientOriginalName();
+            $file->move('uploads', $fileName);
+            $data['file'] = $fileName;
+        }
+
+        DB::table('order_progress')->insert($data);
+        return response()->json(['message' => 'insert successfully'], 200);
+    }
+
+    public function addRating(Order $order, Request $request){
+        $request->validate([
+            "rating" => 'required|integer',
+            'review' => 'string'
+        ]);
+
+        Rating::firstOrCreate(
+            [ 'order_id' => $order->id],
+            [
+                "rating" => $request['rating'],
+                'review' => $request['review']
+            ]
+        );
+
+        return response()->json('rating inserted successfully', 200);
+    }
+
+    public function downloadFile($filename){
+        $file_path = public_path('uploads/'.$filename);
+        if(file_exists($file_path)){
+            return response()->download($file_path, $filename, [
+                'Content-Length: '. filesize($file_path)
+            ]);
+        }else{
+            response()->json(['message' => 'file not exist'], 404);
         }
     }
 

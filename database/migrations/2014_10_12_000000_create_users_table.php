@@ -19,6 +19,7 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
+            $table->string('image_path')->default('https://res.cloudinary.com/dwrorg2la/image/upload/v1642161389/30-307416_profile-icon-png-image-free-download-searchpng-employee.png');
             $table->rememberToken();
             $table->timestamps();
         });

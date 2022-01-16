@@ -5,7 +5,9 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectImageController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\UserController;
 use App\Models\ProjectImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +28,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::group(['middleware' => ['auth:sanctum']], function() {
+    Route::get('/users/{id}', [UserController::class, 'getUserDetail']);
+    Route::post('/users/{id}', [UserController::class, 'updateUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/chats/{ref}', [UserController::class, 'chatUpdate']);
+    Route::get('chats/{id}', [UserController::class, 'getUserChat']);
 });
 
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'design'], function() {
@@ -53,6 +59,8 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'orders'], function(
     Route::get('/', [OrderController::class, 'getOrderList']);
     Route::get('/{order}', [OrderController::class, 'getOrderDetail']);
     Route::post('/{order}/update', [OrderController::class, 'updateOrder']);
+    Route::post('/{order}/update-progress', [OrderController::class, 'updateOrderProgress']);
+    Route::post('/{order}/rating', [OrderController::class, 'addRating']);
 });
 
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'v1'], function() {
