@@ -176,6 +176,7 @@ class OrderController extends Controller
                 ->leftJoin('users', 'users.id', 'o.user_id')
                 ->leftJoin('order_progress', 'order_progress.order_id', 'o.id')
                 ->leftJoin('ratings', 'o.id', 'ratings.order_id')
+                ->leftJoin('order_complaints', 'o.id', 'order_complaints.order_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
@@ -213,6 +214,7 @@ class OrderController extends Controller
                                     "id", payment_images.id,
                                     "image_path", payment_images.image_path
                                 )
+                                order by payment_images.id desc
                             ) , "]") ELSE NULL END as payment_images,
                             CASE WHEN COUNT(order_progress.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
                                 DISTINCT
@@ -221,10 +223,24 @@ class OrderController extends Controller
                                     "name", order_progress.name,
                                     "link", order_progress.file,
                                     "description", order_progress.description,
+                                    "url", order_progress.link,
+                                    "complaint_id", order_progress.complaint_id,
                                     "created_at", order_progress.created_at 
                                 )
                                 order by order_progress.id desc
                             ) , "]") ELSE NULL END as order_progress,
+                            CASE WHEN COUNT(order_complaints.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", order_complaints.id,
+                                    "title", order_complaints.title,
+                                    "description", order_complaints.description,
+                                    "request_image_path", order_complaints.evidence_image_path,
+                                    "response", order_complaints.response,
+                                    "response_image_path", order_complaints.response_image_path
+                                )
+                                order by order_progress.id desc
+                            ) , "]") ELSE NULL END as order_complaints,
                             JSON_OBJECT(
                                 "land_width", land_width,
                                 "land_length", land_length,
@@ -270,6 +286,7 @@ class OrderController extends Controller
                 ->leftJoin('users', 'users.id', 'o.user_id')
                 ->leftJoin('order_progress', 'order_progress.order_id', 'o.id')
                 ->leftJoin('ratings', 'o.id', 'ratings.order_id')
+                ->leftJoin('order_complaints', 'o.id', 'order_complaints.order_id')
                 ->selectRaw('
                             o.id as id,
                             o.name as client_name,
@@ -307,6 +324,7 @@ class OrderController extends Controller
                                     "id", payment_images.id,
                                     "image_path", payment_images.image_path
                                 )
+                                order by payment_images.id desc
                             ) , "]") ELSE NULL END as payment_images,
                             CASE WHEN COUNT(order_progress.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
                                 DISTINCT
@@ -315,10 +333,24 @@ class OrderController extends Controller
                                     "name", order_progress.name,
                                     "link", order_progress.file,
                                     "description", order_progress.description,
+                                    "url", order_progress.link,
+                                    "complaint_id", order_progress.complaint_id,
                                     "created_at", order_progress.created_at 
                                 )
                                 order by order_progress.id desc
                             ) , "]") ELSE NULL END as order_progress,
+                            CASE WHEN COUNT(order_complaints.id) > 0 THEN CONCAT("[" , GROUP_CONCAT(
+                                DISTINCT
+                                json_object(
+                                    "id", order_complaints.id,
+                                    "title", order_complaints.title,
+                                    "description", order_complaints.description,
+                                    "request_image_path", order_complaints.evidence_image_path,
+                                    "response", order_complaints.response,
+                                    "response_image_path", order_complaints.response_image_path
+                                )
+                                order by order_progress.id desc
+                            ) , "]") ELSE NULL END as order_complaints,
                             JSON_OBJECT(
                                 "id", map_interior_order_room.id,
                                 "room_category", rooms.name,
@@ -405,7 +437,8 @@ class OrderController extends Controller
                 DB::table('order_progress')->insert([
                     'order_id' => $orderId,
                     'name' => 'Order selesai oleh Professional',
-                    'description' => $description
+                    'description' => $description,
+                    'link' => $link
                 ]);
                 $order->status_id = 4;
                 $order->save();
@@ -421,6 +454,45 @@ class OrderController extends Controller
                 $order->status_id = 5;
                 $order->save();
                 return response()->json(['message' => 'order updated successfully'], 200);
+                break;
+            //Client give complaint
+            case "7":
+                $file = $request->file('image')->getRealPath();
+                $folderName = 'complaint';
+                $fileName = 'img-complaint-order-'.$orderId;
+                $image_path = CloudinaryStorage::upload($file, $fileName, $folderName);
+                $complaintId = DB::table('order_complaints')->insertGetId([
+                    'order_id' => $orderId,
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'evidence_image_path' => $image_path
+                ]);
+                DB::table('order_progress')->insert([
+                    'order_id' => $orderId,
+                    'name' => 'Client mengajukan komplain',
+                    'complaint_id' => $complaintId
+                ]);
+                $order->status_id = 7;
+                $order->save();
+                break;
+            //Reject Complaint
+            case "8":
+                $data['response'] = $request->description; 
+                if($request->file('image')){
+                    $file = $request->file('image');
+                    $folderName = 'complaint';
+                    $fileName = "img-response-complaint-order".$orderId;
+                    $image_path = CloudinaryStorage::upload($file->getRealPath(), $fileName, $folderName);
+                    $data['response_image_path'] = $image_path;
+                }
+                DB::table('order_complaints')->where('id', $request->complaint_id)->update($data);
+                DB::table('order_progress')->insert([
+                    'order_id' => $orderId,
+                    'name' => 'Professional menolak komplain',
+                    'complaint_id' => $request->complaint_id
+                ]);
+                $order->status_id = 4;
+                $order->save();
                 break;
             default :
                 break;

@@ -21,7 +21,8 @@ class RefOrderStatusSeeder extends Seeder
             [ 'name' => 'PROSES PENGERJAAN' ],
             [ 'name' => 'KONFIRMASI SELESAI'],
             [ 'name' => 'SELESAI'],
-            [ 'name' => 'BATAL']
+            [ 'name' => 'BATAL'],
+            [ 'name' => 'PENGAJUAN KOMPLAIN']
         ]);
     }
 }
