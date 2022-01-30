@@ -37,11 +37,11 @@ class ProfessionalController extends Controller
         }
 
         $sqlDistance = '( 6371 * acos( cos( radians(?) ) 
-        * cos( radians( x(p.location) ) ) 
-        * cos( radians( y(p.location) ) 
+        * cos( radians( ST_X(p.location) ) ) 
+        * cos( radians( ST_Y(p.location) ) 
         - radians(?) ) 
         + sin( radians(?) ) 
-        * sin( radians( x(p.location) ) ) ) )';
+        * sin( radians( ST_X(p.location) ) ) ) )';
         
         $result = DB::table('professionals', 'p')
                     ->leftJoin('cities', 'p.city_id', 'cities.id')
@@ -184,7 +184,7 @@ class ProfessionalController extends Controller
                 return response()->json('account number has been used', 500);
         }
 
-        $request['location'] = DB::raw("(GeomFromText('POINT(".$request->location['latitude']." ".$request->location['longitude'].")'))");
+        $request['location'] = DB::raw("(ST_GeomFromText('POINT(".$request->location['latitude']." ".$request->location['longitude'].")'))");
 
         DB::table('professionals')
             ->where('id', $id)
