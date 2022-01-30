@@ -109,8 +109,8 @@ class ProfessionalController extends Controller
                         "province_name", cities.province_name
                     ) as city,
                     JSON_OBJECT(
-                        "latitude", x(p.location),
-                        "longitude", y(p.location)
+                        "latitude", ST_X(p.location),
+                        "longitude", ST_Y(p.location)
                     ) as location,
                     p.description,
                     p.account_number,
